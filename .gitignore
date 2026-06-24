@@ -1,0 +1,24 @@
+# Rust build output
+/target/
+
+# Working run and export artifacts
+/runs/*
+/outputs/*
+/input-datasets/*
+/models/*
+/runtime/*
+!/runs/.gitkeep
+!/outputs/.gitkeep
+!/input-datasets/.gitkeep
+!/models/.gitkeep
+!/runtime/.gitkeep
+!/input-datasets/demo-mixed/
+!/input-datasets/runtime-smoke.txt
+!/input-datasets/semantic-sample.parquet
+
+# Editor state
+/.idea/
+/.vscode/
+
+# Runtime and local debug logs
+*.log

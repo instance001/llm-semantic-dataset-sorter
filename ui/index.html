@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LLM Semantic Dataset Sorter</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <div id="startup-splash" class="startup-splash" aria-hidden="true">
+      <div class="startup-splash__panel" role="presentation">
+        <img
+          class="startup-splash__image"
+          src="/assets/branding/fmi-splash-wordmark.png"
+          alt="Fractal Media Infrastructure"
+        >
+        <p class="startup-splash__title">Fractal Media Infrastructure</p>
+        <p class="startup-splash__copy">Local-first semantic sorting and analyst review tooling.</p>
+        <p class="startup-splash__hint">Click, Enter, Space, or Esc to continue.</p>
+      </div>
+    </div>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero__copy">
+          <p class="eyebrow">Local Semantic Sorting</p>
+          <h1>LLM Semantic Dataset Sorter</h1>
+          <p class="hero__lede">
+            Inspect datasets, run semantic preflight, understand why the model chose its bucket
+            shape, and materialize sorted output folders locally.
+          </p>
+          <details class="hero__about">
+            <summary>About Fractal Media Infrastructure</summary>
+            <p>
+              LLM Semantic Dataset Sorter is stewarded within Fractal Media Infrastructure as a
+              local-first semantic analysis and audit tool.
+            </p>
+            <p class="hero__about-meta">Steward: Fractal Media Infrastructure (FMI)</p>
+            <p class="hero__about-meta">Site: instance001.github.io</p>
+            <p class="hero__about-meta">License: AGPL-3.0</p>
+          </details>
+        </div>
+        <div class="hero__status card">
+          <h2>Server</h2>
+          <dl id="health-panel" class="kv-list">
+            <div><dt>Status</dt><dd>Loading…</dd></div>
+            <div><dt>Driver</dt><dd>Loading…</dd></div>
+            <div><dt>Inputs</dt><dd>Loading…</dd></div>
+            <div><dt>Outputs</dt><dd>Loading…</dd></div>
+          </dl>
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <section class="card controls">
+          <div class="section-heading">
+            <p class="eyebrow">Run Setup</p>
+            <h2>Dataset And Sort Request</h2>
+          </div>
+          <details class="help-tip">
+            <summary>What happens here?</summary>
+            <p>
+              Choose the dataset, the semantic dimension you want to sort on, how the
+              buckets should be born, and how many positive buckets the model is allowed
+              to create before the mandatory junk bucket.
+            </p>
+          </details>
+
+          <div class="form-grid">
+            <label>
+              <span>Experiment Recipe</span>
+              <span class="field-help">A preset that fills in a sensible starting configuration for common workflows.</span>
+              <select id="experiment-recipe">
+                <option value="topic_balanced" selected>Topic Balanced</option>
+                <option value="code_strict">Code Strict</option>
+                <option value="reasoning_probe">Reasoning Probe</option>
+                <option value="abstract_probe">Abstract Probe</option>
+                <option value="junk_stress">Junk Stress Test</option>
+              </select>
+            </label>
+            <label>
+              <span>Dataset</span>
+              <span class="field-help">Each top-level file or folder inside <code>input-datasets/</code> appears here as one selectable dataset.</span>
+              <select id="dataset-select"></select>
+            </label>
+
+            <label>
+              <span>Sort Intent</span>
+              <span class="field-help">The semantic lens you want the model to use when deciding what belongs together.</span>
+              <select id="sort-intent">
+                <option value="general">General</option>
+                <option value="code">Code</option>
+                <option value="linear_reasoning">Linear Reasoning</option>
+                <option value="abstract_reasoning">Abstract Reasoning</option>
+                <option value="topic" selected>Topic</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Bucket Genesis</span>
+              <span class="field-help">Choose whether buckets are named after a data skim or named blind before the model sees dataset content for plan creation.</span>
+              <select id="bucket-genesis-mode">
+                <option value="data_skim" selected>Data Skim Before Labels</option>
+                <option value="blind_label">Blind Label Before Data</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Positive Bucket Count</span>
+              <span class="field-help">The number of main semantic buckets to create. The runtime always adds one separate junk bucket.</span>
+              <input id="bucket-count" type="number" min="1" value="4">
+            </label>
+
+            <label class="force-toggle">
+              <span>Force Override</span>
+              <span class="field-help">Use this if you want to continue even when preflight says the requested bucket count is semantically poor.</span>
+              <input id="force-override" type="checkbox">
+            </label>
+
+            <label class="form-grid__wide">
+              <span>Custom Instructions</span>
+              <span class="field-help">Optional extra steering when the built-in sort intents are too broad for your real question.</span>
+              <textarea id="custom-instructions" rows="3" placeholder="Optional guidance for the sorter."></textarea>
+            </label>
+          </div>
+
+          <div class="button-row">
+            <button id="watch-current-target-btn" class="button button--ghost">Watch Current Target</button>
+            <button id="apply-recipe-btn" class="button button--ghost">Apply Recipe</button>
+            <button id="refresh-datasets" class="button button--ghost">Refresh Datasets</button>
+            <button id="preview-btn" class="button button--ghost">Preview Dataset</button>
+            <button id="preflight-btn" class="button">Run Preflight</button>
+            <button id="plan-btn" class="button">Generate Plan</button>
+            <button id="sort-btn" class="button button--accent">Sort Dataset</button>
+            <button id="sort-pair-btn" class="button button--ghost">Run Matched Pair</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-heading">
+            <p class="eyebrow">Dataset</p>
+            <h2>Preview</h2>
+          </div>
+          <details class="help-tip">
+            <summary>How should I read this preview?</summary>
+            <p>
+              The left side shows the normalized text the model will sort. The right side
+              shows raw structured rows for Parquet datasets so you can decide whether the
+              current projection is exposing the right evidence.
+            </p>
+          </details>
+          <div id="dataset-meta" class="meta-strip"></div>
+          <div id="dataset-projection-controls" class="summary-panel muted">
+            Preview a dataset to inspect projection controls.
+          </div>
+          <div class="dataset-preview-grid">
+            <article class="run-detail-card">
+              <p class="bucket-id">Normalized Sample</p>
+              <div id="dataset-preview" class="dataset-inspector">Select a dataset to preview normalized items.</div>
+            </article>
+            <article class="run-detail-card">
+              <p class="bucket-id">Raw Structured Rows</p>
+              <div id="dataset-raw-preview" class="dataset-inspector muted">Structured raw sample rows will appear here for Parquet datasets.</div>
+            </article>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-heading">
+            <p class="eyebrow">Model Check</p>
+            <h2>Preflight Verdict</h2>
+          </div>
+          <details class="help-tip">
+            <summary>What is preflight doing?</summary>
+            <p>
+              Preflight is the model's budget sanity check. It judges whether your requested
+              number of positive buckets looks too low, acceptable, or too high for the
+              semantic shape it sees.
+            </p>
+          </details>
+          <div id="preflight-summary" class="summary-panel muted">
+            Run preflight to see whether the model thinks your requested bucket count is good,
+            too low, or too high.
+          </div>
+          <pre id="preflight-json" class="code-panel"></pre>
+        </section>
+
+        <section class="card explanation-card">
+          <div class="section-heading">
+            <p class="eyebrow">Why These Buckets</p>
+            <h2>Plan Explanation</h2>
+          </div>
+          <details class="help-tip">
+            <summary>Why does this explanation matter?</summary>
+            <p>
+              This is the human-facing reasoning layer. It explains the model's interpreted
+              sorting intent, why it chose this bucket shape, what signals it noticed, what
+              it considered weak or junk, and where the grouping may be over-read.
+            </p>
+          </details>
+          <div id="explanation-grid" class="explanation-grid">
+            <div class="placeholder">Generate a bucket plan to read the model's human-facing reasoning.</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-heading">
+            <p class="eyebrow">Plan</p>
+            <h2>Bucket Shape</h2>
+          </div>
+          <details class="help-tip">
+            <summary>What is the frozen plan?</summary>
+            <p>
+              Once generated, this bucket plan becomes the fixed reality for the run. The
+              model must assign items into these buckets instead of inventing new categories
+              midway through the sort.
+            </p>
+          </details>
+          <div id="plan-meta" class="meta-strip"></div>
+          <div id="bucket-list" class="bucket-list">
+            <div class="placeholder">No frozen bucket plan yet. Generate a plan to lock in the sorting reality for this run.</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-heading">
+            <p class="eyebrow">Jobs And Output</p>
+            <h2>Background Sort Runs</h2>
+          </div>
+          <details class="help-tip">
+            <summary>What is tracked here?</summary>
+            <p>
+              Sorts can run as background jobs. This section lets you monitor progress, inspect
+              completed and failed runs, archive old job history, and keep the dashboard tidy
+              without touching saved run artifacts.
+            </p>
+          </details>
+          <div class="form-grid">
+            <label>
+              <span>Job Status Filter</span>
+              <span class="field-help">Limit the job list to specific lifecycle states such as running, completed, or failed.</span>
+              <select id="job-status-filter">
+                <option value="all" selected>All Statuses</option>
+                <option value="queued">Queued</option>
+                <option value="running">Running</option>
+                <option value="blocked">Blocked</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="completed">Completed</option>
+                <option value="failed">Failed</option>
+              </select>
+            </label>
+            <label>
+              <span>Job Dataset Filter</span>
+              <span class="field-help">Search job history by dataset display name.</span>
+              <input id="job-dataset-filter" type="text" placeholder="Filter by dataset name">
+            </label>
+            <label class="force-toggle">
+              <span>Show Archived</span>
+              <span class="field-help">Reveal older job records that were hidden from the main working view.</span>
+              <input id="job-show-archived" type="checkbox">
+            </label>
+          </div>
+          <div class="button-row button-row--tight">
+            <button id="job-archive-completed-btn" class="button button--ghost">Archive Finished</button>
+            <button id="job-delete-archived-btn" class="button button--ghost">Delete Archived</button>
+          </div>
+          <div id="job-retention-note" class="summary-note muted">
+            Archive completed, failed, blocked, and cancelled jobs in bulk, then delete archived history when you want a clean slate.
+          </div>
+          <div id="job-summary" class="summary-panel muted">
+            Start a sort job to track long-running model work without blocking the dashboard.
+          </div>
+          <div id="job-history" class="run-history">
+            <div class="placeholder">No background sort jobs yet. Start a sort to populate live job tracking.</div>
+          </div>
+          <pre id="job-json" class="code-panel">No active sort job selected yet.</pre>
+          <div id="assignment-summary" class="summary-panel muted">
+            Run a full sort to materialize bucket folders and item assignments.
+          </div>
+          <pre id="sort-json" class="code-panel"></pre>
+        </section>
+
+        <section class="card">
+          <div class="section-heading">
+            <p class="eyebrow">Run History</p>
+            <h2>Previous Runs</h2>
+          </div>
+          <details class="help-tip">
+            <summary>What belongs in run history?</summary>
+            <p>
+              Each completed sort becomes a saved run. Use this list to reopen past sorts,
+              compare them, and narrow the list by analyst verdict.
+            </p>
+          </details>
+          <div class="form-grid">
+            <label>
+              <span>Run Verdict Filter</span>
+              <span class="field-help">Show only runs with a specific analyst verdict, or include everything.</span>
+              <select id="run-verdict-filter">
+                <option value="all" selected>All Run Verdicts</option>
+                <option value="unreviewed">Unreviewed</option>
+                <option value="useful">Useful</option>
+                <option value="surprising">Surprising</option>
+                <option value="needs_followup">Needs Follow-Up</option>
+                <option value="misleading">Misleading</option>
+              </select>
+            </label>
+          </div>
+          <div class="button-row">
+            <button id="refresh-runs" class="button button--ghost">Refresh Runs</button>
+          </div>
+          <div id="run-history" class="run-history">
+            <div class="placeholder">No saved runs yet. Complete a sort to create inspectable run artifacts.</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-heading">
+            <p class="eyebrow">Run Inspection</p>
+            <h2>Run Detail</h2>
+          </div>
+          <details class="help-tip">
+            <summary>What can I inspect here?</summary>
+            <p>
+              Open a saved run to read the human summary, inspect the evidence used to justify
+              the result, browse bucket exports, and leave an analyst review for future comparison.
+            </p>
+          </details>
+          <div id="run-detail-meta" class="meta-strip"></div>
+          <div id="run-detail-artifacts" class="summary-panel muted">
+            Open a saved run to inspect its saved artifacts and export surfaces.
+          </div>
+          <div class="button-row button-row--tight">
+            <button id="run-detail-download-btn" class="button button--ghost">Download Current Artifact</button>
+            <button id="run-detail-compare-left-btn" class="button button--ghost">Use As Compare Left</button>
+            <button id="run-detail-compare-right-btn" class="button button--ghost">Use As Compare Right</button>
+            <button id="run-detail-compare-now-btn" class="button button--ghost">Compare With Selected</button>
+          </div>
+          <div class="run-detail-grid">
+            <article class="run-detail-card">
+              <p class="bucket-id">Human Summary</p>
+              <pre id="run-detail-summary" class="code-panel">Open a saved run to read its human-facing summary.</pre>
+            </article>
+            <article class="run-detail-card">
+              <p class="bucket-id">Evidence Snapshot</p>
+              <div id="run-detail-evidence" class="run-evidence-panel muted">
+                Open a saved run to compare its narrative summary against the underlying bucket-plan evidence.
+              </div>
+            </article>
+          </div>
+          <div class="section-heading">
+            <p class="eyebrow">Bucket Exports</p>
+            <h3>Sorted Output Browser</h3>
+          </div>
+          <div id="run-detail-bucket-exports" class="run-history">
+            <div class="placeholder">Open a saved run to browse bucket export folders and downloadable files.</div>
+          </div>
+          <div id="run-detail-current-artifact" class="summary-note muted">
+            Current artifact view: raw run detail
+          </div>
+          <div class="review-editor">
+            <label>
+              <span>Run Verdict</span>
+              <select id="run-review-verdict">
+                <option value="unreviewed" selected>Unreviewed</option>
+                <option value="useful">Useful</option>
+                <option value="surprising">Surprising</option>
+                <option value="needs_followup">Needs Follow-Up</option>
+                <option value="misleading">Misleading</option>
+              </select>
+            </label>
+            <label class="form-grid__wide">
+              <span>Analyst Run Note</span>
+              <textarea id="run-review-note" rows="4" placeholder="What was actually useful, surprising, weak, or worth revisiting about this run?"></textarea>
+            </label>
+            <div class="button-row button-row--tight">
+              <button id="run-review-save-btn" class="button button--ghost">Save Run Review</button>
+              <button id="run-review-apply-btn" class="button button--ghost">Use Review As Next Run</button>
+            </div>
+            <div id="run-review-status" class="summary-note muted">No analyst run review saved yet.</div>
+          </div>
+          <pre id="run-detail-json" class="code-panel">Open a saved run to inspect its stored artifacts.</pre>
+        </section>
+
+        <section class="card">
+          <div class="section-heading">
+            <p class="eyebrow">Watchlist</p>
+            <h2>Trend Tracking</h2>
+          </div>
+          <details class="help-tip">
+            <summary>What does the watchlist track?</summary>
+            <p>
+              Watch a dataset and sort-intent pair over time. The watchlist surfaces interestingness,
+              drift, structural notes, and regression pressure as matched experiments accumulate.
+            </p>
+          </details>
+          <div id="watchlist-summary-note" class="summary-panel muted">
+            Watch dataset and intent targets to track interestingness shifts across matched experiments over time.
+          </div>
+          <div id="watchlist-history" class="run-history">
+            <div class="placeholder">No watch targets yet. Add one from the current run setup to start tracking drift over time.</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-heading">
+            <p class="eyebrow">Analyst Review</p>
+            <h2>Follow-Up Queue And State</h2>
+          </div>
+          <details class="help-tip">
+            <summary>What lives in analyst state?</summary>
+            <p>
+              Analyst state includes run reviews, experiment reviews, watch targets, snapshots,
+              and imported or exported review metadata. It does not alter the raw saved run artifacts.
+            </p>
+          </details>
+          <div class="button-row">
+            <button id="reviewed-runs-export-btn" class="button button--ghost">Reviewed Runs Markdown</button>
+            <button id="reviewed-runs-json-btn" class="button button--ghost">Reviewed Runs JSON</button>
+            <button id="reviewed-runs-csv-btn" class="button button--ghost">Reviewed Runs CSV</button>
+          </div>
+          <div class="button-row button-row--tight">
+            <button id="reviewed-experiments-export-btn" class="button button--ghost">Reviewed Experiments Markdown</button>
+            <button id="reviewed-experiments-json-btn" class="button button--ghost">Reviewed Experiments JSON</button>
+            <button id="reviewed-experiments-csv-btn" class="button button--ghost">Reviewed Experiments CSV</button>
+          </div>
+          <div class="button-row button-row--tight">
+            <button id="analysis-state-export-btn" class="button button--ghost">Export Review State</button>
+            <button id="analysis-state-import-merge-btn" class="button button--ghost">Import Merge</button>
+            <button id="analysis-state-import-replace-btn" class="button button--ghost">Import Replace</button>
+            <input id="analysis-state-import-input" type="file" accept="application/json,.json" hidden>
+          </div>
+          <div id="analysis-state-import-status" class="summary-note muted">
+            Review-state import/export moves analyst notes, verdicts, watch targets, and alert tracking without changing stored run artifacts.
+          </div>
+          <div id="analysis-state-import-preview" class="summary-panel muted">
+            An import preview will appear here before any analyst state is changed.
+          </div>
+          <div class="form-grid">
+            <label>
+              <span>Imported Snapshot Name</span>
+              <span class="field-help">The name to give a snapshot created from the pending imported analyst state.</span>
+              <input id="analysis-state-import-snapshot-name" type="text" placeholder="e.g. imported-topic-pass">
+            </label>
+            <label>
+              <span>Update Existing Snapshot</span>
+              <span class="field-help">Optionally write the pending import into one existing snapshot instead of creating a new one.</span>
+              <select id="analysis-state-import-existing-snapshot">
+                <option value="">Choose snapshot</option>
+              </select>
+            </label>
+          </div>
+          <div class="button-row button-row--tight">
+            <button id="analysis-state-import-diff-btn" class="button button--ghost" disabled>Download Diff Report</button>
+            <button id="analysis-state-import-snapshot-btn" class="button button--ghost" disabled>Save Import As Snapshot</button>
+            <button id="analysis-state-import-update-snapshot-btn" class="button button--ghost" disabled>Update Existing Snapshot</button>
+            <button id="analysis-state-import-confirm-btn" class="button button--ghost" disabled>Apply Imported State</button>
+            <button id="analysis-state-import-cancel-btn" class="button button--ghost" disabled>Cancel Import</button>
+          </div>
+          <div id="review-inbox-summary" class="summary-panel muted">
+            Analyst-marked follow-up items will appear here.
+          </div>
+          <div class="form-grid">
+            <label>
+              <span>Timeline Scope</span>
+              <select id="review-timeline-filter">
+                <option value="all" selected>Runs + Experiments</option>
+                <option value="runs">Runs Only</option>
+                <option value="experiments">Experiments Only</option>
+              </select>
+            </label>
+          </div>
+          <div id="review-inbox-timeline" class="summary-panel muted">
+            Review activity over time will appear here once reviews have been saved.
+          </div>
+          <div id="review-inbox-history" class="run-history">
+            <div class="placeholder">No follow-up items are queued right now.</div>
+          </div>
+          <div class="section-heading">
+            <p class="eyebrow">Snapshots</p>
+            <h3>Named Analyst States</h3>
+          </div>
+          <div class="form-grid">
+            <label>
+              <span>Snapshot Name</span>
+              <span class="field-help">A human-readable checkpoint name for the current analyst review state.</span>
+              <input id="analysis-snapshot-name" type="text" placeholder="e.g. topic-pass-v1">
+            </label>
+            <label>
+              <span>Snapshot Tags</span>
+              <span class="field-help">Short labels for grouping snapshots such as baseline, rerun, topic, or blind-vs-skim.</span>
+              <input id="analysis-snapshot-tags" type="text" placeholder="e.g. topic, baseline, rerun">
+            </label>
+            <label class="form-grid__wide">
+              <span>Snapshot Note</span>
+              <span class="field-help">Capture why this snapshot matters so the future comparison still makes sense later.</span>
+              <textarea id="analysis-snapshot-note" rows="3" placeholder="Why does this analyst snapshot matter?"></textarea>
+            </label>
+            <div class="button-row button-row--tight">
+              <button id="analysis-snapshot-save-btn" class="button button--ghost">Save Current Snapshot</button>
+              <button id="analysis-snapshot-export-all-btn" class="button button--ghost">Export All Reports</button>
+            </div>
+          </div>
+          <div id="analysis-snapshot-status" class="summary-note muted">
+            Save named analyst states so you can return to prior verdict sets, watch targets, and review notes later.
+          </div>
+          <div class="form-grid">
+            <label>
+              <span>Filter Snapshots</span>
+              <input id="analysis-snapshot-filter" type="text" placeholder="Filter by tag or name">
+            </label>
+          </div>
+          <div id="analysis-snapshot-history" class="run-history">
+            <div class="placeholder">No named analyst snapshots yet. Save one when you want to checkpoint the current review state.</div>
+          </div>
+          <div class="section-heading">
+            <p class="eyebrow">Snapshot Comparison</p>
+            <h3>Compare Analyst States</h3>
+          </div>
+          <div class="form-grid">
+            <label>
+              <span>Left Snapshot</span>
+              <span class="field-help">The earlier or baseline analyst state you want to compare from.</span>
+              <select id="analysis-snapshot-compare-left">
+                <option value="">No snapshots</option>
+              </select>
+            </label>
+            <label>
+              <span>Right Snapshot</span>
+              <span class="field-help">The later or alternative analyst state you want to compare against.</span>
+              <select id="analysis-snapshot-compare-right">
+                <option value="">No snapshots</option>
+              </select>
+            </label>
+            <div class="button-row button-row--tight">
+              <button id="analysis-snapshot-compare-btn" class="button button--ghost">Compare Snapshots</button>
+            </div>
+            <label>
+              <span>Compare View</span>
+              <span class="field-help">Choose whether to show every tracked section or only the sections that changed.</span>
+              <select id="analysis-snapshot-compare-mode">
+                <option value="all" selected>Show All Sections</option>
+                <option value="changed_only">Changed Only</option>
+              </select>
+            </label>
+          </div>
+          <div id="analysis-snapshot-compare-summary" class="summary-panel muted">
+            Pick two named analyst snapshots to compare how verdicts, watch targets, and alert tracking shifted.
+          </div>
+          <div id="analysis-snapshot-compare-grid" class="compare-grid">
+            <div class="placeholder">No snapshot comparison loaded yet. Pick two snapshots and compare them to surface review-state drift.</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-heading">
+            <p class="eyebrow">Experiments</p>
+            <h2>Experiment Pairs</h2>
+          </div>
+          <details class="help-tip">
+            <summary>What is an experiment pair?</summary>
+            <p>
+              A matched experiment groups related runs of the same target so you can compare
+              blind-label and data-skim behavior, review drift, bucket drift, projection drift,
+              junk pressure, and overall interestingness.
+            </p>
+          </details>
+          <div class="form-grid">
+            <label>
+              <span>Experiment Status</span>
+              <span class="field-help">Show all experiments, only complete blind-vs-skim pairs, or partial unfinished groupings.</span>
+              <select id="experiment-status-filter">
+                <option value="all" selected>All Experiments</option>
+                <option value="complete">Complete Pairs</option>
+                <option value="partial">Partial Pairs</option>
+              </select>
+            </label>
+            <label>
+              <span>Sort Experiments</span>
+              <span class="field-help">Order experiment cards by recency, interestingness, or a specific drift signal.</span>
+              <select id="experiment-sort">
+                <option value="newest" selected>Newest First</option>
+                <option value="interestingness">Interestingness</option>
+                <option value="analyst_priority">Analyst Priority</option>
+                <option value="bucket_drift">Bucket Drift</option>
+                <option value="projection_drift">Projection Drift</option>
+                <option value="distribution_drift">Distribution Drift</option>
+                <option value="explanation_drift">Explanation Drift</option>
+                <option value="junk_drift">Junk Drift</option>
+              </select>
+            </label>
+            <label>
+              <span>Analysis Preset</span>
+              <span class="field-help">A higher-level filter that emphasizes one type of signal, such as ontology drift or projection drift.</span>
+              <select id="experiment-preset">
+                <option value="all" selected>All Signals</option>
+                <option value="most_interesting">Most Interesting</option>
+                <option value="ontology_drift">Ontology Drift</option>
+                <option value="projection_drift">Projection Drift</option>
+                <option value="assignment_drift">Assignment Drift</option>
+                <option value="explanation_drift">Explanation Drift</option>
+                <option value="review_pressure">Review Pressure</option>
+              </select>
+            </label>
+            <label>
+              <span>Experiment Dataset Filter</span>
+              <span class="field-help">Narrow experiment history to one dataset name.</span>
+              <input id="experiment-dataset-filter" type="text" placeholder="Filter by dataset name">
+            </label>
+            <label>
+              <span>Minimum Interestingness</span>
+              <span class="field-help">Hide low-signal experiments below this interestingness score.</span>
+              <input id="experiment-interest-threshold" type="number" min="0" value="0">
+            </label>
+            <label class="force-toggle">
+              <span>Auto-Open Top Interesting</span>
+              <span class="field-help">Automatically focus the strongest interesting experiment after the list refreshes.</span>
+              <input id="experiment-auto-open" type="checkbox">
+            </label>
+            <label>
+              <span>Alert Threshold</span>
+              <span class="field-help">Experiments at or above this interestingness threshold can be surfaced as alerts.</span>
+              <input id="experiment-alert-threshold" type="number" min="0" value="6">
+            </label>
+            <label>
+              <span>Experiment Verdict Filter</span>
+              <span class="field-help">Filter experiment history by analyst verdict status.</span>
+              <select id="experiment-verdict-filter">
+                <option value="all" selected>All Experiment Verdicts</option>
+                <option value="unreviewed">Unreviewed</option>
+                <option value="useful">Useful</option>
+                <option value="surprising">Surprising</option>
+                <option value="needs_followup">Needs Follow-Up</option>
+                <option value="misleading">Misleading</option>
+              </select>
+            </label>
+          </div>
+          <div id="experiment-summary-note" class="summary-panel muted">
+            Matched runs let you track `Data Skim` and `Blind Label` as one experiment with shared identity and drift metrics.
+          </div>
+          <div id="experiment-history" class="run-history">
+            <div class="placeholder">No matched experiments detected yet. Run a blind-vs-skim pair on the same target to create one.</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-heading">
+            <p class="eyebrow">Experiment Report</p>
+            <h2>Focused Pair Readout</h2>
+          </div>
+          <details class="help-tip">
+            <summary>What should I look for in the pair readout?</summary>
+            <p>
+              This report is where the relationship between two matched runs becomes explicit:
+              bucket changes, assignment drift, explanation drift, structural differences, and
+              what the tool suggests you do next.
+            </p>
+          </details>
+          <div class="button-row">
+            <button id="experiment-export-btn" class="button button--ghost">Export Report</button>
+            <button id="experiment-export-html-btn" class="button button--ghost">Export HTML</button>
+            <button id="experiment-export-batch-btn" class="button button--ghost">Batch Export Complete</button>
+            <button id="experiment-apply-suggestion-btn" class="button button--ghost">Apply Suggested Recipe</button>
+          </div>
+          <div id="experiment-report-meta" class="meta-strip"></div>
+          <div class="review-editor">
+            <label>
+              <span>Experiment Verdict</span>
+              <select id="experiment-review-verdict">
+                <option value="unreviewed" selected>Unreviewed</option>
+                <option value="useful">Useful</option>
+                <option value="surprising">Surprising</option>
+                <option value="needs_followup">Needs Follow-Up</option>
+                <option value="misleading">Misleading</option>
+              </select>
+            </label>
+            <label class="form-grid__wide">
+              <span>Analyst Experiment Note</span>
+              <textarea id="experiment-review-note" rows="4" placeholder="What relationship between the grouped things mattered here, and what should we do next?"></textarea>
+            </label>
+            <div class="button-row button-row--tight">
+              <button id="experiment-review-save-btn" class="button button--ghost">Save Experiment Review</button>
+              <button id="experiment-review-apply-btn" class="button button--ghost">Use Review As Next Run</button>
+            </div>
+            <div id="experiment-review-status" class="summary-note muted">No analyst experiment review saved yet.</div>
+          </div>
+          <div id="experiment-report-grid" class="compare-grid">
+            <div class="placeholder">Open an experiment report to inspect paired drift, structural differences, and next-move guidance in one place.</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-heading">
+            <p class="eyebrow">Run Comparison</p>
+            <h2>Side By Side Runs</h2>
+          </div>
+          <details class="help-tip">
+            <summary>When should I use run comparison?</summary>
+            <p>
+              Use this when you want a direct run-to-run diff instead of a higher-level matched
+              experiment readout. It is useful for checking bucket shape, assignment outcomes,
+              and export differences between any two saved runs.
+            </p>
+          </details>
+          <div class="form-grid">
+            <label>
+              <span>Left Run</span>
+              <span class="field-help">The first saved run in the side-by-side comparison.</span>
+              <select id="compare-left"></select>
+            </label>
+            <label>
+              <span>Right Run</span>
+              <span class="field-help">The second saved run in the side-by-side comparison.</span>
+              <select id="compare-right"></select>
+            </label>
+          </div>
+          <div class="button-row">
+            <button id="compare-btn" class="button button--accent">Compare Runs</button>
+            <button id="compare-best-pair-btn" class="button button--ghost">Best Blind vs Skim Pair</button>
+          </div>
+          <div id="compare-summary" class="summary-panel muted">
+            Pick two saved runs to compare bucket genesis mode, bucket shape, and assignment outcomes.
+          </div>
+          <div id="compare-pair-note" class="summary-note muted">
+            Best results come from matching the same dataset, sort intent, and requested bucket count across `Data Skim` and `Blind Label`.
+          </div>
+          <div id="compare-grid" class="compare-grid">
+            <div class="placeholder">No run comparison loaded yet. Choose two saved runs to diff bucket shape and assignment outcomes.</div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+  </html>

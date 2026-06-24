@@ -1,0 +1,1 @@
+A linear proof should show each premise and inference in sequence.
