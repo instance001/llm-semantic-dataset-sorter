@@ -134,6 +134,8 @@ The point is not to worship the buckets.
 
 The point is to inspect what the buckets reveal.
 
+The lens clarity works best when human translation is preserved.
+
 ## The Bridge (Latent → Human)
 
 The AI processes everything in high-dimensional latent space. Humans process in language and causality. 
@@ -143,6 +145,32 @@ Most systems try to force the AI to map directly to human taxonomies—a compute
 This tool inverts that: **Let the LLM sort according to its own intrinsic logic.** We don't force it to think like us. We just ask it, at the very end, to translate its decision boundaries back into human-readable *labels* and—crucially—the *rationale* for each choice.
 
 The compute is spent on high-fidelity latent sorting. The translation layer is a cheap final pass. This is potentially computationally more elegant while preserving semantic richness.
+
+The reviewer's verdict doesn't end at "correct" or "wrong".
+
+When the human disagrees with the bucket or the rationale, they log their own `WHY`. Over multiple runs, you build a corpus of **reconciled ontologies**—cases where the human and machine negotiated a shared understanding.
+
+This is the actual bridge. Not a one-way translation. A **two-way semantic reconciliation layer**.
+
+## The Deposition, Not the Verdict
+
+When a model assigns an item, we immediately ask: *"Why did you put it there?"*
+
+This forces the LLM to climb down from its statistical latent space and render its internal proximity logic in plain English. Suddenly, the sorting isn't a one-way projection—it's a **negotiation**.
+
+- **Weak rationale** → The item likely sits on a boundary. Needs a second pass.
+- **Hallucinated rationale** → The model is forcing a fit. Flag it for manual review.
+- **Strong, consistent rationale** → High confidence. The item genuinely belongs.
+
+The "WHY" turns the output from a static result into a living audit trail.
+
+Without "WHY", comparing models only tells you *where* they differ. With "WHY", you learn *how* they think.
+
+- Model A: *"Put this in 'Cross-Compatible' because it uses JSON schemas."*
+- Model B: *"Put this in 'Standalone' because it has no external dependencies."*
+
+Same item. Completely different ontological frames. You're now profiling the cognitive fingerprint of the training data, not just measuring benchmark performance.
+
 
 ## Data Agnosticism
 
@@ -288,7 +316,8 @@ If different models produce different buckets, the dataset may be exposing model
 
 
 
-None of this proves what a model “really thinks.”
+None of this proves what a model “really thinks”, it is a tool for *understanding how machines understand*—and for reconciling that understanding with our own.
+
 
 
 
