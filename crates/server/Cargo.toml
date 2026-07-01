@@ -1,0 +1,18 @@
+[package]
+name = "server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+axum.workspace = true
+chrono.workspace = true
+llm = { path = "../llm" }
+pipeline = { path = "../pipeline" }
+serde.workspace = true
+serde_json.workspace = true
+sorter-core = { path = "../core" }
+storage = { path = "../storage" }
+tokio.workspace = true
+uuid.workspace = true

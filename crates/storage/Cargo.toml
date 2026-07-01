@@ -1,0 +1,14 @@
+[package]
+name = "storage"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+arrow-array.workspace = true
+arrow-schema.workspace = true
+parquet.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sorter-core = { path = "../core" }
