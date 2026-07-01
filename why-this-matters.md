@@ -1,4 +1,4 @@
-\# Why This Matters
+# Why This Matters
 
 
 
@@ -8,29 +8,33 @@ LLM Semantic Dataset Sorter is named like a sorter because sorting is the visibl
 
 The deeper purpose is semantic triangulation.
 
-
+By running the **same dataset, same intent, same model** in two modes:
+- **`blind_label`**: The model names buckets *before* seeing the data (pure intrinsic ontology).
+- **`data_skim`**: The model names buckets *after* seeing the data (data-driven extrinsic ontology).
 
 It is a local-first workbench for asking:
 
 
 
-\* what structure does a model see in this dataset?
+* what structure does a model see in this dataset?
 
-\* what connections become visible under a particular intent?
+* what connections become visible under a particular intent?
 
-\* what does not fit cleanly?
+* what does not fit cleanly?
 
-\* what changes when the bucket budget changes?
+* what changes when the bucket budget changes?
 
-\* what changes when the model sees the data before naming buckets?
+* what changes when the model sees the data before naming buckets?
 
-\* what changes when the model must name buckets before seeing the data?
+* what changes when the model must name buckets before seeing the data?
 
-\* what changes when another model, projection, or instruction set is used?
+* what changes when another model, projection, or instruction set is used?
 
 
 
 The tool does not claim to reveal objective truth inside a dataset.
+
+However, we can now measure **semantic invariants**. An item that lands in the same bucket under both conditions is a "hard anchor"—a piece of data whose semantic gravity is strong enough to survive context stripping. An item that jumps buckets reveals a "context-dependent signal"—its meaning shifts depending on framing.
 
 
 
@@ -38,7 +42,7 @@ It reveals model-visible structure under declared conditions, then preserves eno
 
 
 
-\## The Sort Is The Probe
+## The Sort Is The Probe
 
 
 
@@ -54,17 +58,17 @@ The user defines the sorting pressure:
 
 
 
-\* dataset
+* dataset
 
-\* sort intent
+* sort intent
 
-\* positive bucket count
+* positive bucket count
 
-\* bucket genesis mode
+* bucket genesis mode
 
-\* projection fields
+* projection fields
 
-\* custom instructions
+* custom instructions
 
 
 
@@ -84,7 +88,7 @@ The bucket plan, junk spillover, explanations, weak signals, and assignment dist
 
 
 
-\## Buckets Are Lenses, Not Truth
+## Buckets Are Lenses, Not Truth
 
 
 
@@ -100,19 +104,19 @@ A useful bucket can reveal:
 
 
 
-\* a recurring theme
+* a recurring theme
 
-\* a hidden connection
+* a hidden connection
 
-\* a gap between similar-looking items
+* a gap between similar-looking items
 
-\* a repeated failure mode
+* a repeated failure mode
 
-\* a family of related implementation problems
+* a family of related implementation problems
 
-\* a cluster of reasoning styles
+* a cluster of reasoning styles
 
-\* an unexpected relationship across otherwise separate records
+* an unexpected relationship across otherwise separate records
 
 
 
@@ -130,10 +134,58 @@ The point is not to worship the buckets.
 
 The point is to inspect what the buckets reveal.
 
+The lens clarity works best when human translation is preserved.
+
+## The Bridge (Latent → Human)
+
+The AI processes everything in high-dimensional latent space. Humans process in language and causality. 
+
+Most systems try to force the AI to map directly to human taxonomies—a compute-expensive, lossy translation that often fails because the AI's native geometry doesn't align with ours.
+
+This tool inverts that: **Let the LLM sort according to its own intrinsic logic.** We don't force it to think like us. We just ask it, at the very end, to translate its decision boundaries back into human-readable *labels* and—crucially—the *rationale* for each choice.
+
+The compute is spent on high-fidelity latent sorting. The translation layer is a cheap final pass. This is potentially computationally more elegant while preserving semantic richness.
+
+The reviewer's verdict doesn't end at "correct" or "wrong".
+
+When the human disagrees with the bucket or the rationale, they log their own `WHY`. Over multiple runs, you build a corpus of **reconciled ontologies**—cases where the human and machine negotiated a shared understanding.
+
+This is the actual bridge. Not a one-way translation. A **two-way semantic reconciliation layer**.
+
+## The Deposition, Not the Verdict
+
+When a model assigns an item, we immediately ask: *"Why did you put it there?"*
+
+This forces the LLM to climb down from its statistical latent space and render its internal proximity logic in plain English. Suddenly, the sorting isn't a one-way projection—it's a **negotiation**.
+
+- **Weak rationale** → The item likely sits on a boundary. Needs a second pass.
+- **Hallucinated rationale** → The model is forcing a fit. Flag it for manual review.
+- **Strong, consistent rationale** → High confidence. The item genuinely belongs.
+
+The "WHY" turns the output from a static result into a living audit trail.
+
+Without "WHY", comparing models only tells you *where* they differ. With "WHY", you learn *how* they think.
+
+- Model A: *"Put this in 'Cross-Compatible' because it uses JSON schemas."*
+- Model B: *"Put this in 'Standalone' because it has no external dependencies."*
+
+Same item. Completely different ontological frames. You're now profiling the cognitive fingerprint of the training data, not just measuring benchmark performance.
 
 
-\## Junk Is Not Trash
+## Data Agnosticism
 
+This system doesn't care if you feed it code, prose, parquet tables, worldbuilding notes, or financial logs. Content is irrelevant; *structure and semantics* are universal. The ingestion lanes (JSONL, CSV, Parquet, plaintext) are just adaptors for the same semantic engine.
+
+## Model Mapping (Cognitive Fingerprinting)
+
+Run the same intent and dataset across different GGUF models. Compare:
+- Where they place items.
+- How they name their buckets.
+- What rationales they give for their "WHY".
+
+You're not benchmarking speed or accuracy. You're profiling the **latent ontology baked into each model's training data**. Models that cluster similarly share similar worldviews. This is interpretability at the meta-level, revealing the philosophical biases of the architecture itself.
+
+## Junk Is Not Trash
 
 
 The junk bucket is one of the most important parts of the system.
@@ -152,23 +204,23 @@ Items may land in junk because they are:
 
 
 
-\* weak-fit
+* weak-fit
 
-\* ambiguous
+* ambiguous
 
-\* mixed-content
+* mixed-content
 
-\* off-intent
+* off-intent
 
-\* too low-signal
+* too low-signal
 
-\* outside the requested ontology
+* outside the requested ontology
 
-\* evidence that the bucket budget is wrong
+* evidence that the bucket budget is wrong
 
-\* evidence that the sort intent is too narrow
+* evidence that the sort intent is too narrow
 
-\* evidence that the projection lost important context
+* evidence that the projection lost important context
 
 
 
@@ -180,19 +232,19 @@ A high-junk run might mean:
 
 
 
-\* widen the bucket count
+* widen the bucket count
 
-\* broaden the intent
+* broaden the intent
 
-\* change the projection
+* change the projection
 
-\* split the dataset
+* split the dataset
 
-\* run a second finer sieve over junk only
+* run a second finer sieve over junk only
 
-\* compare another model
+* compare another model
 
-\* preserve the junk as genuine out-of-distribution material
+* preserve the junk as genuine out-of-distribution material
 
 
 
@@ -208,7 +260,7 @@ This lets messy datasets be refined gradually instead of forced into fake clean 
 
 
 
-\## Triangulation Through Repeated Runs
+## Triangulation Through Repeated Runs
 
 
 
@@ -224,19 +276,19 @@ The same dataset can be sorted under different conditions:
 
 
 
-\* `data\_skim` versus `blind\_label`
+* `data\_skim` versus `blind\_label`
 
-\* broad intent versus narrow intent
+* broad intent versus narrow intent
 
-\* 3 buckets versus 6 buckets
+* 3 buckets versus 6 buckets
 
-\* one model versus another model
+* one model versus another model
 
-\* one Parquet projection versus another projection
+* one Parquet projection versus another projection
 
-\* one custom instruction set versus another
+* one custom instruction set versus another
 
-\* full dataset versus junk-only refinement
+* full dataset versus junk-only refinement
 
 
 
@@ -264,7 +316,8 @@ If different models produce different buckets, the dataset may be exposing model
 
 
 
-None of this proves what a model “really thinks.”
+None of this proves what a model “really thinks”, it is a tool for *understanding how machines understand*—and for reconciling that understanding with our own.
+
 
 
 
@@ -272,7 +325,7 @@ It gives the human operator comparative evidence.
 
 
 
-\## Gap And Connection Surfacing
+## Gap And Connection Surfacing
 
 
 
@@ -284,25 +337,25 @@ A record may not share vocabulary with another record but may share:
 
 
 
-\* intent
+* intent
 
-\* failure mode
+* failure mode
 
-\* reasoning shape
+* reasoning shape
 
-\* implementation risk
+* implementation risk
 
-\* abstraction level
+* abstraction level
 
-\* missing prerequisite
+* missing prerequisite
 
-\* operational role
+* operational role
 
-\* dependency relationship
+* dependency relationship
 
-\* hidden compatibility
+* hidden compatibility
 
-\* weak-fit boundary pressure
+* weak-fit boundary pressure
 
 
 
@@ -314,17 +367,17 @@ It can also surface gaps:
 
 
 
-\* important items that do not fit any bucket
+* important items that do not fit any bucket
 
-\* categories that should exist but do not
+* categories that should exist but do not
 
-\* items that mix multiple concerns
+* items that mix multiple concerns
 
-\* overly broad buckets hiding separate problems
+* overly broad buckets hiding separate problems
 
-\* narrow buckets with no real population
+* narrow buckets with no real population
 
-\* records whose meaning depends on missing fields
+* records whose meaning depends on missing fields
 
 
 
@@ -336,7 +389,7 @@ The bucket name alone is not enough. The rationale, weak signals, caution notes,
 
 
 
-\## Why Local-First Matters
+## Why Local-First Matters
 
 
 
@@ -348,21 +401,21 @@ Examples:
 
 
 
-\* project notes
+* project notes
 
-\* unpublished research
+* unpublished research
 
-\* code snippets
+* code snippets
 
-\* logs
+* logs
 
-\* training data
+* training data
 
-\* support records
+* support records
 
-\* internal planning documents
+* internal planning documents
 
-\* personal knowledge archives
+* personal knowledge archives
 
 
 
@@ -378,7 +431,7 @@ The goal is to make the model's role inspectable while preserving user control o
 
 
 
-\## What This Tool Is Not
+## What This Tool Is Not
 
 
 
@@ -386,19 +439,19 @@ This tool is not:
 
 
 
-\* an objective truth machine
+* an objective truth machine
 
-\* a replacement for human review
+* a replacement for human review
 
-\* a generic embedding search tool
+* a generic embedding search tool
 
-\* a hidden classifier
+* a hidden classifier
 
-\* an automatic dataset-quality oracle
+* an automatic dataset-quality oracle
 
-\* proof of a model's internal cognition
+* proof of a model's internal cognition
 
-\* a guarantee that the produced buckets are correct
+* a guarantee that the produced buckets are correct
 
 
 
@@ -410,7 +463,7 @@ It gives the user a controlled way to ask a local model to generate, explain, fr
 
 
 
-\## The Core Idea
+## The Core Idea
 
 
 
@@ -430,27 +483,27 @@ The useful artifact is the whole run:
 
 
 
-\* requested intent
+* requested intent
 
-\* bucket budget
+* bucket budget
 
-\* preflight verdict
+* preflight verdict
 
-\* bucket plan
+* bucket plan
 
-\* explanation
+* explanation
 
-\* assignments
+* assignments
 
-\* junk spillover
+* junk spillover
 
-\* review notes
+* review notes
 
-\* comparisons
+* comparisons
 
-\* snapshots
+* snapshots
 
-\* exports
+* exports
 
 
 
