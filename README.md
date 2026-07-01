@@ -293,6 +293,7 @@ $env:SORTER_AUTO_OPEN_BROWSER = "0"
 
 ## Documentation
 
+- [Glossary](./GLOSSARY.md)
 - [Zero-Knowledge User Manual](./docs/05-user-manual.md)
 - [Operations And Cleanup](./docs/06-operations-and-cleanup.md)
 - [Release Checklist](./docs/07-release-checklist.md)
