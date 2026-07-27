@@ -37,6 +37,33 @@ The governing rule is:
 > The model defines the semantic partition inside that budget.  
 > The runtime enforces structure and preserves the audit trail.
 
+## Semantic Sorting Pipeline
+
+```mermaid
+flowchart LR
+    dataset["Dataset<br/>file, folder, JSONL, text, or Parquet"] --> projection["Projection / normalization<br/>model-facing item stream"]
+    intent["Sort intent<br/>topic, code, reasoning, custom"] --> preflight
+    budget["Bucket budget<br/>N positive buckets + junk"] --> preflight["Preflight<br/>budget-fit judgment"]
+    projection --> preflight
+    preflight --> decision{"Operator decision"}
+    decision -->|accept or force| genesis["Bucket genesis<br/>data_skim or blind_label"]
+    genesis --> plan["Frozen bucket plan<br/>exactly N positive buckets + junk"]
+    plan --> assign["Assignment pass<br/>items sorted against locked plan"]
+    projection --> assign
+    assign --> artifacts["Run artifacts<br/>assignments, events, summaries, exports"]
+    artifacts --> dashboard["Dashboard review<br/>bucket browser + comparison"]
+    dashboard --> analyst["Analyst state<br/>verdicts, notes, watchlists, snapshots"]
+    analyst --> triangulation["Semantic triangulation<br/>compare budgets, modes, models, junk behavior"]
+
+    classDef input fill:#eef7f2,stroke:#25624f,color:#14231d;
+    classDef process fill:#fff8ec,stroke:#9b5b2e,color:#2a1b10;
+    classDef review fill:#f3f0ea,stroke:#777,color:#333;
+
+    class dataset,intent,budget input;
+    class projection,preflight,decision,genesis,plan,assign process;
+    class artifacts,dashboard,analyst,triangulation review;
+```
+
 ## Core Concepts
 
 ### Sort Intent
