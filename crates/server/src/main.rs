@@ -19,7 +19,7 @@ use std::{
     collections::HashMap,
     env, fs,
     net::SocketAddr,
-    path::PathBuf,
+    path::{Path as StdPath, PathBuf},
     process::Command,
     sync::{Arc, Mutex},
 };
@@ -249,15 +249,24 @@ struct AnalysisStatePayload {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let runtime_dir = env::var("SORTER_RUNTIME_DIR").unwrap_or_else(|_| "./runtime".to_string());
-    let model_path = env::var("SORTER_MODEL_PATH")
-        .unwrap_or_else(|_| "./models/Qwen3-VL-8B-Instruct-abliterated-v2.Q4_K_M.gguf".to_string());
+    let app_root = default_app_root();
+    let runtime_dir = env_path_or_default("SORTER_RUNTIME_DIR", &app_root, "runtime");
+    let model_path = env_path_or_default(
+        "SORTER_MODEL_PATH",
+        &app_root,
+        "models/Qwen3-VL-8B-Instruct-abliterated-v2.Q4_K_M.gguf",
+    );
     let llm_driver = env::var("SORTER_LLM_DRIVER").unwrap_or_else(|_| "mock".to_string());
     let input_datasets_dir =
-        env::var("SORTER_INPUT_DATASETS_DIR").unwrap_or_else(|_| "./input-datasets".to_string());
-    let outputs_dir = env::var("SORTER_OUTPUTS_DIR").unwrap_or_else(|_| "./outputs".to_string());
+        env_path_or_default("SORTER_INPUT_DATASETS_DIR", &app_root, "input-datasets");
+    let outputs_dir = env_path_or_default("SORTER_OUTPUTS_DIR", &app_root, "outputs");
 
-    ensure_app_dirs(&input_datasets_dir, &outputs_dir)?;
+    let models_dir = StdPath::new(&model_path)
+        .parent()
+        .map(StdPath::to_path_buf)
+        .unwrap_or_else(|| app_root.join("models"));
+
+    ensure_app_dirs(&input_datasets_dir, &models_dir, &runtime_dir, &outputs_dir)?;
     let migration_report = migrate_output_layout(&outputs_dir)?;
     log_output_layout_migration(&migration_report);
     let mut persisted_jobs = load_job_registry(&outputs_dir)?;
@@ -344,6 +353,35 @@ async fn main() -> anyhow::Result<()> {
     }
     axum::serve(listener, app).await?;
     Ok(())
+}
+
+fn default_app_root() -> PathBuf {
+    if let Ok(value) = env::var("SORTER_APP_ROOT") {
+        return PathBuf::from(value);
+    }
+
+    let current_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    if current_dir.join("Cargo.toml").exists()
+        || current_dir.join("input-datasets").exists()
+        || current_dir.join("outputs").exists()
+        || current_dir.join("portable.flag").exists()
+    {
+        return current_dir;
+    }
+
+    env::current_exe()
+        .ok()
+        .and_then(|path| path.parent().map(StdPath::to_path_buf))
+        .unwrap_or(current_dir)
+}
+
+fn env_path_or_default(var_name: &str, app_root: &StdPath, relative_default: &str) -> String {
+    env::var(var_name).unwrap_or_else(|_| {
+        app_root
+            .join(relative_default)
+            .to_string_lossy()
+            .to_string()
+    })
 }
 
 fn should_auto_open_browser() -> bool {

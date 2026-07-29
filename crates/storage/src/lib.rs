@@ -58,12 +58,26 @@ pub fn state_dir(outputs_root: impl AsRef<Path>) -> PathBuf {
 
 pub fn ensure_app_dirs(
     input_datasets_dir: impl AsRef<Path>,
+    models_dir: impl AsRef<Path>,
+    runtime_dir: impl AsRef<Path>,
     outputs_dir: impl AsRef<Path>,
 ) -> Result<()> {
     fs::create_dir_all(input_datasets_dir.as_ref()).with_context(|| {
         format!(
             "failed to create input datasets dir {}",
             input_datasets_dir.as_ref().display()
+        )
+    })?;
+    fs::create_dir_all(models_dir.as_ref()).with_context(|| {
+        format!(
+            "failed to create models dir {}",
+            models_dir.as_ref().display()
+        )
+    })?;
+    fs::create_dir_all(runtime_dir.as_ref()).with_context(|| {
+        format!(
+            "failed to create runtime dir {}",
+            runtime_dir.as_ref().display()
         )
     })?;
     fs::create_dir_all(outputs_dir.as_ref()).with_context(|| {

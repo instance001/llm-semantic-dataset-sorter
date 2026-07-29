@@ -42,7 +42,7 @@ cargo check -p server
 If you changed frontend logic, also run a quick syntax check:
 
 ```powershell
-node -e "new Function(require('fs').readFileSync('C:\\Users\\User\\Desktop\\github_portal\\llm-semantic-dataset-sorter\\ui\\app.js','utf8')); console.log('app.js syntax ok')"
+node -e "new Function(require('fs').readFileSync('ui/app.js','utf8')); console.log('app.js syntax ok')"
 ```
 
 ## 4. Startup Validation

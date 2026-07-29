@@ -184,10 +184,12 @@ impl LlamaCliAdapter {
                 model_path.as_ref().display()
             )
         })?;
-        let executable = runtime_dir.join("llama-cli.exe");
+        let executable = env::var("SORTER_LLAMA_CLI_PATH")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| runtime_dir.join(default_llama_cli_executable_name()));
 
         if !executable.exists() {
-            bail!("missing llama-cli.exe at {}", executable.display());
+            bail!("missing llama-cli executable at {}", executable.display());
         }
         if !model_path.exists() {
             bail!("missing model file at {}", model_path.display());
@@ -324,6 +326,14 @@ impl LlamaCliAdapter {
                 tail
             )
         })
+    }
+}
+
+fn default_llama_cli_executable_name() -> &'static str {
+    if cfg!(target_os = "windows") {
+        "llama-cli.exe"
+    } else {
+        "llama-cli"
     }
 }
 

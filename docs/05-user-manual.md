@@ -173,6 +173,8 @@ Example:
 
 - `runtime/llama-cli.exe`
 
+On non-Windows systems the executable is normally named `llama-cli`. You can also point directly at a runtime binary with `SORTER_LLAMA_CLI_PATH`.
+
 ### `outputs/`
 
 The tool writes results here.

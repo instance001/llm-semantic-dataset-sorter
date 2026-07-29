@@ -241,6 +241,10 @@ The server currently supports:
 
 - `SORTER_RUNTIME_DIR`
 - `SORTER_MODEL_PATH`
+- `SORTER_APP_ROOT`
+- `SORTER_INPUT_DATASETS_DIR`
+- `SORTER_OUTPUTS_DIR`
+- `SORTER_LLAMA_CLI_PATH`
 - `SORTER_LLM_DRIVER`
 - `SORTER_AUTO_OPEN_BROWSER`
 - `SORTER_LLM_N_GPU_LAYERS`
@@ -317,6 +321,19 @@ $env:SORTER_AUTO_OPEN_BROWSER = "0"
 13. Inspect saved outputs, bucket exports, and run details.
 14. Review runs and experiments.
 15. Save snapshots of analyst state and compare them later.
+
+## Portable Folder Behavior
+
+By default, the server uses local portable folders:
+
+- `input-datasets/`
+- `models/`
+- `runtime/`
+- `outputs/`
+
+When run from a source checkout, those folders resolve under the repo root. When run as a packaged binary from another working directory, they resolve beside the executable unless you set `SORTER_APP_ROOT` or the more specific path variables above.
+
+On first run, the server creates the needed dataset and output folders automatically. Model files and runtime binaries are operator-provided.
 
 ## Documentation
 
