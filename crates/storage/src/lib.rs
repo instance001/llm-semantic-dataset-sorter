@@ -56,6 +56,18 @@ pub fn state_dir(outputs_root: impl AsRef<Path>) -> PathBuf {
     outputs_root.as_ref().join("state")
 }
 
+pub const OUTPUT_LAYOUT_DIRS: &[&str] = &[
+    "analysis",
+    "exports",
+    "history",
+    "history/analysis",
+    "logs",
+    "runs",
+    "state",
+];
+
+pub const RUNTIME_LAYOUT_DIRS: &[&str] = &["windows"];
+
 pub fn ensure_app_dirs(
     input_datasets_dir: impl AsRef<Path>,
     models_dir: impl AsRef<Path>,
@@ -86,21 +98,25 @@ pub fn ensure_app_dirs(
             outputs_dir.as_ref().display()
         )
     })?;
-    fs::create_dir_all(runs_dir(&outputs_dir))
-        .with_context(|| format!("failed to create {}", runs_dir(&outputs_dir).display()))?;
-    fs::create_dir_all(analysis_dir(&outputs_dir))
-        .with_context(|| format!("failed to create {}", analysis_dir(&outputs_dir).display()))?;
-    fs::create_dir_all(analysis_history_dir(&outputs_dir)).with_context(|| {
-        format!(
-            "failed to create {}",
-            analysis_history_dir(&outputs_dir).display()
-        )
-    })?;
-    fs::create_dir_all(exports_dir(&outputs_dir))
-        .with_context(|| format!("failed to create {}", exports_dir(&outputs_dir).display()))?;
-    fs::create_dir_all(state_dir(&outputs_dir))
-        .with_context(|| format!("failed to create {}", state_dir(&outputs_dir).display()))?;
+    for relative in RUNTIME_LAYOUT_DIRS {
+        let dir = layout_dir(runtime_dir.as_ref(), relative);
+        fs::create_dir_all(&dir).with_context(|| format!("failed to create {}", dir.display()))?;
+    }
+    for relative in OUTPUT_LAYOUT_DIRS {
+        let dir = layout_dir(outputs_dir.as_ref(), relative);
+        fs::create_dir_all(&dir).with_context(|| format!("failed to create {}", dir.display()))?;
+    }
     Ok(())
+}
+
+pub fn layout_dir(root: &Path, relative: &str) -> PathBuf {
+    let mut path = root.to_path_buf();
+    for component in relative.split('/') {
+        if !component.is_empty() {
+            path.push(component);
+        }
+    }
+    path
 }
 
 pub fn list_output_runs(outputs_root: impl AsRef<Path>) -> Result<Vec<RunHistoryEntry>> {
@@ -1765,6 +1781,61 @@ fn humanize_bucket_export_dir_name(bucket_dir_name: &str) -> String {
         })
         .collect::<Vec<_>>()
         .join(" ")
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        fs,
+        path::PathBuf,
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
+    use super::{OUTPUT_LAYOUT_DIRS, RUNTIME_LAYOUT_DIRS, ensure_app_dirs, layout_dir};
+
+    fn temp_dir(label: &str) -> PathBuf {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        std::env::temp_dir().join(format!("semantic-sorter-storage-{label}-{unique}"))
+    }
+
+    #[test]
+    fn ensure_app_dirs_bootstraps_binary_first_run_layout() {
+        let root = temp_dir("first-run-layout");
+        let input_datasets = root.join("input-datasets");
+        let models = root.join("models");
+        let runtime = root.join("runtime");
+        let outputs = root.join("outputs");
+
+        ensure_app_dirs(&input_datasets, &models, &runtime, &outputs).unwrap();
+
+        assert!(input_datasets.is_dir());
+        assert!(models.is_dir());
+        assert!(runtime.is_dir());
+        assert!(outputs.is_dir());
+
+        for relative in RUNTIME_LAYOUT_DIRS {
+            let dir = layout_dir(&runtime, relative);
+            assert!(
+                dir.is_dir(),
+                "expected first-run runtime folder {} to exist",
+                dir.display()
+            );
+        }
+
+        for relative in OUTPUT_LAYOUT_DIRS {
+            let dir = layout_dir(&outputs, relative);
+            assert!(
+                dir.is_dir(),
+                "expected first-run output folder {} to exist",
+                dir.display()
+            );
+        }
+
+        fs::remove_dir_all(root).unwrap();
+    }
 }
 
 fn is_text_previewable_export_file_name(file_name: &str) -> bool {
