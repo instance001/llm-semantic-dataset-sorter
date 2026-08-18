@@ -34,7 +34,7 @@ People often ask LLMs to group messy data into categories, but two things usuall
 
 This tool solves that by splitting the task into stages:
 
-1. understand the sorting request
+1. interpret the sorting request
 2. judge the bucket budget
 3. generate a fixed bucket plan
 4. assign items into that fixed plan
@@ -108,7 +108,7 @@ The model can warn you, but you can still choose to force the run.
 
 ### Frozen Bucket Plan
 
-Once a plan is generated, that plan becomes the truth for the run.
+Once a plan is generated, that plan becomes the reference frame for the run.
 
 The model is not allowed to invent new bucket logic later during assignment.
 

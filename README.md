@@ -109,7 +109,7 @@ The tool supports two bucket-creation modes:
 
 This lets you compare:
 
-- "what does the model think the data wants?"
+- "what bucket shape does the data suggest to the model?"
 - versus
 - "what ontology does the model impose before seeing the data?"
 

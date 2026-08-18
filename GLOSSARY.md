@@ -145,7 +145,7 @@ What it is not:
 The locked bucket plan for a run.
 
 What it is:
-- the bucket reality fixed before assignment begins
+- the bucket frame fixed before assignment begins
 - the thing the model must live inside during sorting
 - a guard against mid-run ontology drift
 
@@ -181,6 +181,20 @@ What it is not:
 - worshipping the first bucket names the model invents
 - assuming a neat partition is automatically a correct one
 - replacing human judgment
+
+## Semantic Fingerprinting
+
+Comparing model outputs across controlled runs to characterize observable semantic behavior.
+
+What it is:
+- a way to compare how different models partition, name, and justify the same dataset under the same intent
+- an output-level profile of model-relative semantic priors
+- useful for interpretability and model selection
+
+What it is not:
+- proof of internal model cognition
+- direct access to training-data structure
+- a claim that models have worldviews or minds
 
 ## Analyst State
 

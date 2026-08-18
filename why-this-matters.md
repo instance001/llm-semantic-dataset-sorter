@@ -9,7 +9,7 @@ LLM Semantic Dataset Sorter is named like a sorter because sorting is the visibl
 The deeper purpose is semantic triangulation.
 
 By running the **same dataset, same intent, same model** in two modes:
-- **`blind_label`**: The model names buckets *before* seeing the data (pure intrinsic ontology).
+- **`blind_label`**: The model names buckets *before* seeing the data (model-prior ontology).
 - **`data_skim`**: The model names buckets *after* seeing the data (data-driven extrinsic ontology).
 
 It is a local-first workbench for asking:
@@ -142,13 +142,13 @@ The AI processes everything in high-dimensional latent space. Humans process in 
 
 Most systems try to force the AI to map directly to human taxonomies—a compute-expensive, lossy translation that often fails because the AI's native geometry doesn't align with ours.
 
-This tool inverts that: **Let the LLM sort according to its own intrinsic logic.** We don't force it to think like us. We just ask it, at the very end, to translate its decision boundaries back into human-readable *labels* and—crucially—the *rationale* for each choice.
+This tool inverts that: **Let the LLM sort according to its model-prior decision structure.** We don't force it to mimic a human taxonomy. We ask it, at the very end, to translate its decision boundaries back into human-readable *labels* and—crucially—the *rationale* for each choice.
 
 The compute is spent on high-fidelity latent sorting. The translation layer is a cheap final pass. This is potentially computationally more elegant while preserving semantic richness.
 
 The reviewer's verdict doesn't end at "correct" or "wrong".
 
-When the human disagrees with the bucket or the rationale, they log their own `WHY`. Over multiple runs, you build a corpus of **reconciled ontologies**—cases where the human and machine negotiated a shared understanding.
+When the human disagrees with the bucket or the rationale, they log their own `WHY`. Over multiple runs, you build a corpus of **reconciled ontologies**—cases where human review and model output are brought into an explicit shared frame.
 
 This is the actual bridge. Not a one-way translation. A **two-way semantic reconciliation layer**.
 
@@ -156,7 +156,7 @@ This is the actual bridge. Not a one-way translation. A **two-way semantic recon
 
 When a model assigns an item, we immediately ask: *"Why did you put it there?"*
 
-This forces the LLM to climb down from its statistical latent space and render its internal proximity logic in plain English. Suddenly, the sorting isn't a one-way projection—it's a **negotiation**.
+This forces the LLM to climb down from its statistical latent space and render its assignment rationale in plain English. Suddenly, the sorting isn't a one-way projection—it's a **negotiation**.
 
 - **Weak rationale** → The item likely sits on a boundary. Needs a second pass.
 - **Hallucinated rationale** → The model is forcing a fit. Flag it for manual review.
@@ -164,26 +164,26 @@ This forces the LLM to climb down from its statistical latent space and render i
 
 The "WHY" turns the output from a static result into a living audit trail.
 
-Without "WHY", comparing models only tells you *where* they differ. With "WHY", you learn *how* they think.
+Without "WHY", comparing models only tells you *where* they differ. With "WHY", you learn *how their rationales diverge*.
 
 - Model A: *"Put this in 'Cross-Compatible' because it uses JSON schemas."*
 - Model B: *"Put this in 'Standalone' because it has no external dependencies."*
 
-Same item. Completely different ontological frames. You're now profiling the cognitive fingerprint of the training data, not just measuring benchmark performance.
+Same item. Completely different ontological frames. You're now profiling a semantic fingerprint of model behavior, not just measuring benchmark performance.
 
 
 ## Data Agnosticism
 
 This system doesn't care if you feed it code, prose, parquet tables, worldbuilding notes, or financial logs. Content is irrelevant; *structure and semantics* are universal. The ingestion lanes (JSONL, CSV, Parquet, plaintext) are just adaptors for the same semantic engine.
 
-## Model Mapping (Cognitive Fingerprinting)
+## Model Mapping (Semantic Fingerprinting)
 
 Run the same intent and dataset across different GGUF models. Compare:
 - Where they place items.
 - How they name their buckets.
 - What rationales they give for their "WHY".
 
-You're not benchmarking speed or accuracy. You're profiling the **latent ontology baked into each model's training data**. Models that cluster similarly share similar worldviews. This is interpretability at the meta-level, revealing the philosophical biases of the architecture itself.
+You're not benchmarking speed or accuracy. You're profiling the **latent ontology expressed by each model under controlled prompts**. Models that cluster similarly may share similar semantic priors. This is interpretability at the meta-level, revealing observable biases in model outputs rather than claiming direct access to internal cognition.
 
 ## Junk Is Not Trash
 
@@ -316,7 +316,7 @@ If different models produce different buckets, the dataset may be exposing model
 
 
 
-None of this proves what a model “really thinks”, it is a tool for *understanding how machines understand*—and for reconciling that understanding with our own.
+None of this proves what a model “really thinks”; it is a tool for *inspecting how machines represent and explain semantic structure*—and for reconciling those outputs with human review.
 
 
 

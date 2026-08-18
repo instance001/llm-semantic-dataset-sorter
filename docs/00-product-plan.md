@@ -8,7 +8,7 @@ The name is functional and accurate. It can be revised later if the product grow
 
 ## Product Definition
 
-This product sorts arbitrary datasets into model-defined semantic buckets using a local GGUF LLM running through a Vulkan-capable runtime.
+This product sorts arbitrary datasets into model-proposed semantic buckets using a local GGUF LLM running through a Vulkan-capable runtime.
 
 The user controls:
 
@@ -53,7 +53,7 @@ The runtime controls:
 
 ### Preflight
 
-- intent understanding
+- intent interpretation
 - dataset-shape summary
 - suitability verdict for the requested bucket count
 - recommendation such as `too_low`, `acceptable`, or `too_high`
