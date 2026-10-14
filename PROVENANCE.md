@@ -32,3 +32,9 @@ GitHub API licence field at inventory time: `AGPL-3.0`. This is a metadata obser
 ## Evidence and limitations
 
 Evidence: authenticated GitHub API metadata captured by the FMI provenance audit. Contribution, prior art, ownership, contributors, document licensing, relationships, releases, and publication status require human verification.
+
+## Evidence-led lineage position
+
+`README.md` and the Rust pipeline/storage crates support an `IMPLEMENTED` governed semantic-partitioning workbench. Its documented combination is: an operator-selected positive-bucket budget; model-generated categories within that fixed budget; exactly one mandatory `junk` overflow bucket; a preflight fit judgment that may be overridden explicitly; `blind_label` versus `data_skim` plan genesis; a frozen plan whose count is validated against the requested count before assignment; saved assignment/event/export artifacts; and dashboard-based analyst verdict, comparison, watchlist, snapshot, and export workflows. `crates/pipeline/src/lib.rs` validates the requested count and only allows plan generation after acceptable preflight or an explicit force override; `crates/storage/src/lib.rs` persists plan, preflight, assignments, summaries, and run artifacts.
+
+This repository is not automatically Semantic Signal Alphabet or LLM-Defined Persistent Memory. The reviewed README/source record does not state a dependency or inheritance relationship to either; all three concern semantic organisation but serve distinct documented purposes. Do not infer a lineage from terminology alone. General categorisation, clustering, manual review, audit trails, and overflow handling are established patterns; this record asserts only the implemented combination and preserves uncertainty about novelty/priority.
